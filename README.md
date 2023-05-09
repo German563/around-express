@@ -11,10 +11,7 @@ The API was built using Express.js, a popular Node.js framework for building web
 `/routes` — routing files.  
   
 All other directories are optional and may be created by the developer if necessary.   
-  
-## Running the Project  
-  
-`npm run start` — to launch the server.  
+   
   
 
 
