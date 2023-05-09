@@ -1,13 +1,13 @@
-const { getJsonFromFile } = require("../helpers/files");
-const path = require("path");
+const path = require('path');
+const { getJsonFromFile } = require('../helpers/files');
 
-const cardsFilePath = path.join(__dirname, "..", "data", "cards.json");
+const cardsFilePath = path.join(__dirname, '..', 'data', 'cards.json');
 const getCards = async (req, res) => {
   try {
     const cards = await getJsonFromFile(cardsFilePath);
     res.send(cards);
   } catch (error) {
-    res.status(500).send("Something went wrong");
+    res.status(500).send({ message: 'Something went wrong' });
   }
 };
 
