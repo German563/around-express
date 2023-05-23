@@ -1,28 +1,108 @@
-const path = require('path');
+const User = require('../models/user');
+const {
+  ERROR_CODE_USER, ERROR_CODE_BAD_REQUEST, ERROR_CODE_SERVER, message400, message500,
+} = require('../utils/errors');
 
-const { getJsonFromFile } = require('../helpers/files');
-
-const usersFilePath = path.join(__dirname, '..', 'data', 'users.json');
 const getUsers = async (req, res) => {
   try {
-    const users = await getJsonFromFile(usersFilePath);
+    const users = await User.find({});
     res.send(users);
-  } catch (error) {
-    res.status(500).send('Something went wrong');
-  }
-};
-
-const getUserById = async (req, res) => {
-  try {
-    const users = await getJsonFromFile(usersFilePath);
-    const foundUser = users.find((user) => user._id === req.params._id);
-
-    if (!foundUser) {
-      res.status(404).send({ message: 'User not exist' });
+  } catch (err) {
+    if (err.name === 'CastError') {
+      res.status(ERROR_CODE_USER).send({ message: message400 });
+    } else {
+      res.status(ERROR_CODE_SERVER).send({ message: message500 });
     }
-    res.send(foundUser);
-  } catch (error) {
-    res.status(500).send({ message: 'Something went wrong' });
   }
 };
-module.exports = { getUsers, getUserById };
+
+const getUserById = (req, res, next) => {
+  User.findById(req.params.userId)
+    .then((user) => {
+      if (!user) {
+        res.status(ERROR_CODE_USER).send({ message: message400 });
+      }
+      return res.status(200).send({ data: user });
+    })
+    .catch((err) => {
+      if (err.name === 'CastError') {
+        res.status(ERROR_CODE_SERVER).send({ message: message500 });
+      }
+      throw err;
+    })
+    .catch(next);
+};
+
+const createUser = (req, res, next) => {
+  const {
+    name, about, avatar,
+  } = req.body;
+  User.create({
+    name,
+    about,
+    avatar,
+  })
+    .then((user) => res.status(200).send(user))
+    .catch((err) => {
+      if (err.name === 'CastError') {
+        res.status(ERROR_CODE_SERVER).send({ message: message500 });
+      }
+      throw err;
+    })
+    .catch(next);
+};
+
+
+const updateUser = async (req, res) => {
+  try {
+    const user = await User.findByIdAndUpdate(req.user._id, {
+      name: req.body.name,
+      about: req.body.about,
+    }, { runValidators: true, new: true })
+      .orFail(new Error('NotValidId'));
+    res.send(user);
+  } catch (err) {
+    if (err.message === 'NotValidId') {
+      res.status(ERROR_CODE_BAD_REQUEST).send({ message: 'No such user' });
+    } else if (err.name === 'ValidationError') {
+      res.status(ERROR_CODE_USER).send({ message: err.message });
+    } else {
+      res.status(ERROR_CODE_SERVER).send({ message: message500 });
+    }
+  }
+};
+
+const updateAvatarUser = async (req, res) => {
+  try {
+    const avatarLink = req.body.avatar;
+
+    const pattern = /^(http|https):\/\/(?:www\.)?[a-zA-Z0-9._~:\/?%#\[\]@!$&'()*+,;=-]+(?:#[a-zA-Z0-9._~:\/?%#\[\]@!$&'()*+,;=-]+)?$/;
+
+    if (!pattern.test(avatarLink)) {
+      return res.status(ERROR_CODE_BAD_REQUEST).send({ message: 'Invalid avatar link' });
+    }
+
+    const avatar = await User.findByIdAndUpdate(req.user._id, {
+      avatar: avatarLink,
+    }, { runValidators: true, new: true })
+      .orFail(new Error('NotValidId'));
+
+    res.send(avatar);
+  } catch (err) {
+    if (err.message === 'NotValidId') {
+      res.status(ERROR_CODE_BAD_REQUEST).send({ message: 'No such user' });
+    } else if (err.name === 'ValidationError') {
+      res.status(ERROR_CODE_USER).send({ message: err.message });
+    } else {
+      res.status(ERROR_CODE_SERVER).send({ message: message500 });
+    }
+  }
+};
+
+module.exports = {
+  getUsers,
+  getUserById,
+  createUser,
+  updateUser,
+  updateAvatarUser,
+};
