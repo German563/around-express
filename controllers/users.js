@@ -8,32 +8,26 @@ const getUsers = async (req, res) => {
     const users = await User.find({});
     res.send(users);
   } catch (err) {
-    if (err.name === 'CastError') {
-      res.status(ERROR_CODE_USER).send({ message: message400 });
-    } else {
-      res.status(ERROR_CODE_SERVER).send({ message: message500 });
-    }
+    res.status(ERROR_CODE_SERVER).send({ message: 'Internal server error' });
   }
 };
 
-const getUserById = (req, res, next) => {
+const getUserById = (req, res) => {
   User.findById(req.params.userId)
     .then((user) => {
       if (!user) {
-        res.status(ERROR_CODE_USER).send({ message: message400 });
+        res.status(ERROR_CODE_USER).send({ message: 'User not found' });
       }
       return res.status(200).send({ data: user });
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        res.status(ERROR_CODE_SERVER).send({ message: message500 });
+        res.status(ERROR_CODE_SERVER).send({ message: message400 });
       }
-      throw err;
-    })
-    .catch(next);
+    });
 };
 
-const createUser = (req, res, next) => {
+const createUser = (req, res) => {
   const {
     name, about, avatar,
   } = req.body;
@@ -44,14 +38,11 @@ const createUser = (req, res, next) => {
   })
     .then((user) => res.status(200).send(user))
     .catch((err) => {
-      if (err.name === 'CastError') {
-        res.status(ERROR_CODE_SERVER).send({ message: message500 });
+      if (err.name === 'ValidationError') {
+        res.status(ERROR_CODE_SERVER).send({ message: message400 });
       }
-      throw err;
-    })
-    .catch(next);
+    });
 };
-
 
 const updateUser = async (req, res) => {
   try {
@@ -75,18 +66,10 @@ const updateUser = async (req, res) => {
 const updateAvatarUser = async (req, res) => {
   try {
     const avatarLink = req.body.avatar;
-
-    const pattern = /^(http|https):\/\/(?:www\.)?[a-zA-Z0-9._~:\/?%#\[\]@!$&'()*+,;=-]+(?:#[a-zA-Z0-9._~:\/?%#\[\]@!$&'()*+,;=-]+)?$/;
-
-    if (!pattern.test(avatarLink)) {
-      return res.status(ERROR_CODE_BAD_REQUEST).send({ message: 'Invalid avatar link' });
-    }
-
     const avatar = await User.findByIdAndUpdate(req.user._id, {
       avatar: avatarLink,
     }, { runValidators: true, new: true })
       .orFail(new Error('NotValidId'));
-
     res.send(avatar);
   } catch (err) {
     if (err.message === 'NotValidId') {

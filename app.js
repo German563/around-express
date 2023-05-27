@@ -1,5 +1,8 @@
 const express = require('express');
 const mongoose = require('mongoose');
+const {
+  ERROR_CODE_BAD_REQUEST,
+} = require('./utils/errors');
 
 const app = express();
 
@@ -23,7 +26,7 @@ app.use('/', usersRouter);
 app.use(cardsRouter);
 
 app.use('/', (req, res) => {
-  res.status(404).send({ message: 'Requested resource not found' });
+  res.status(ERROR_CODE_BAD_REQUEST).send({ message: 'Requested resource not found' });
 });
 
 app.listen(port, () => {

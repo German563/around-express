@@ -8,13 +8,7 @@ const getCards = async (req, res) => {
     const card = await Card.find({});
     res.send(card);
   } catch (err) {
-    if (err.name === 'CastError') {
-      res.status(ERROR_CODE_USER).send({ message: message400 });
-    } else if (err.name === 'ValidationError') {
-      res.status(ERROR_CODE_BAD_REQUEST).send({ message: err.message });
-    } else {
-      res.status(ERROR_CODE_SERVER).send({ message: message500 });
-    }
+    res.status(ERROR_CODE_SERVER).send({ message: 'Internal server error' });
   }
 };
 
@@ -27,12 +21,10 @@ const createCard = async (req, res) => {
     });
     res.send(card);
   } catch (err) {
-    if (err.name === 'CastError') {
-      res.status(ERROR_CODE_USER).send({ message: message400 });
-    } else if (err.name === 'ValidationError') {
+    if (err.name === 'ValidationError') {
       res.status(ERROR_CODE_BAD_REQUEST).send({ message: err.message });
     } else {
-      res.status(ERROR_CODE_SERVER).send({ message: message500 });
+      res.status(ERROR_CODE_SERVER).send({ message: message400 });
     }
   }
 };
