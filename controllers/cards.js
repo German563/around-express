@@ -22,9 +22,9 @@ const createCard = async (req, res) => {
     res.send(card);
   } catch (err) {
     if (err.name === 'ValidationError') {
-      res.status(ERROR_CODE_BAD_REQUEST).send({ message: err.message });
+      res.status(ERROR_CODE_USER).send({ message: message400 });
     } else {
-      res.status(ERROR_CODE_SERVER).send({ message: message400 });
+      res.status(ERROR_CODE_SERVER).send({ message: message500 });
     }
   }
 };

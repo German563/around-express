@@ -16,13 +16,15 @@ const getUserById = (req, res) => {
   User.findById(req.params.userId)
     .then((user) => {
       if (!user) {
-        res.status(ERROR_CODE_USER).send({ message: 'User not found' });
+        res.status(ERROR_CODE_BAD_REQUEST).send({ message: 'User not found' });
       }
       return res.status(200).send({ data: user });
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        res.status(ERROR_CODE_SERVER).send({ message: message400 });
+        res.status(ERROR_CODE_USER).send({ message: message400 });
+      } else {
+        res.status(ERROR_CODE_SERVER).send({ message: message500 });
       }
     });
 };
@@ -39,7 +41,9 @@ const createUser = (req, res) => {
     .then((user) => res.status(200).send(user))
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        res.status(ERROR_CODE_SERVER).send({ message: message400 });
+        res.status(ERROR_CODE_USER).send({ message: message400 });
+      } else {
+        res.status(ERROR_CODE_SERVER).send({ message: message500 });
       }
     });
 };
